@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CNN Powered Emotion Recognition</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial; }
+#container { display: flex; align-items: flex-start; }
+#video-container { margin-right: 20px; }
+#video { border: 2px solid #000; width: 640px; height: 480px; }
+#charts { display: flex; flex-direction: column; justify-content: space-between; height: 480px; }
+canvas { width: 300px !important; height: 220px !important; }
+button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+</style>
+</head>
+<body>
+<h1>CNN Powered Emotion Recognition For Enhanced Online Learning</h1>
+
+<div>
+  <button onclick="startVideo()">Start</button>
+  <button onclick="stopVideo()">Stop</button>
+</div>
+
+<div id="container">
+  <div id="video-container">
+    <img id="video" src="">
+  </div>
+  <div id="charts">
+    <canvas id="pieChart"></canvas>
+    <canvas id="barChart"></canvas>
+  </div>
+</div>
+
+<script>
+let pieCtx = document.getElementById('pieChart').getContext('2d');
+let barCtx = document.getElementById('barChart').getContext('2d');
+
+let labels = ['Engaged', 'Bored/Neutral', 'Confused/Frustrated', 'No Face Detected'];
+
+let pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: { labels: labels, datasets: [{ data: [0,0,0,0], backgroundColor: ['#4caf50','#ffeb3b','#f44336','#9e9e9e'] }] },
+    options: { responsive: false }
+});
+
+let barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: 'Learning State Counts', data: [0,0,0,0], backgroundColor: ['#4caf50','#ffeb3b','#f44336','#9e9e9e'] }] },
+    options: { responsive: false, scales: { y: { beginAtZero: true } } }
+});
+
+let videoRunning = false;
+
+function startVideo() {
+    fetch('/start').then(() => {
+        document.getElementById('video').src = '/video_feed';
+        videoRunning = true;
+    });
+}
+
+function stopVideo() {
+    fetch('/stop').then(() => {
+        document.getElementById('video').src = '';
+        videoRunning = false;
+    });
+}
+
+// Update charts every second
+setInterval(() => {
+    if(videoRunning){
+        fetch('/emotion_data')
+        .then(res => res.json())
+        .then(data => {
+            let values = [
+                data['Engaged'] || 0,
+                data['Bored/Neutral'] || 0,
+                data['Confused/Frustrated'] || 0,
+                data['No Face Detected'] || 0
+            ];
+
+            pieChart.data.datasets[0].data = values;
+            pieChart.update();
+
+            barChart.data.datasets[0].data = values;
+            barChart.update();
+        });
+    }
+}, 1000);
+</script>
+</body>
+</html>
